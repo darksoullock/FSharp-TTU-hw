@@ -81,15 +81,13 @@ let rec eval<'t> (lookup: 't -> int) expr =
 // 6. Write a map function for Exp<'t>, it can be thought of a
 //    'renaming' function that renames variables.
 
-let rec mapE e old _new = 
+let rec mapE e f = 
     match e with
     | Val(n)    -> Val(n)
-    | Var(v)    -> if v = old 
-                   then Var(_new)
-                   else Var(old)
-    | Add(m,n)  -> Add(mapE m old _new, mapE n old _new)
+    | Var(v)    -> f v
+    | Add(m,n)  -> Add(mapE m f, mapE n f)
 
-//eval<int> (fun x -> x) (mapE (Add(Val(One), Var(2))) 2 4)
+//eval<int> (fun x -> x) (mapE (Add(Val(One), Var(2))) (fun x -> Val(Two)))
 
 // 7. Write a bind function (see section 6.8.2) for Exp<'t>, it can be
 //    thought of as a substitution function that replaces variables with
@@ -103,44 +101,3 @@ let rec bind e (expMap:Map<'t, 'a>) =
     | Add(m,n)  -> Add(bind m expMap, bind n expMap)
 
 //bind (Add(Val(One), Var("Two"))) (Map.ofList ["Two", <@@ 2+2-2 @@>])
-
-//open System.Text
-//open Microsoft.FSharp.Quotations
-//open Microsoft.FSharp.Quotations.Patterns
-//open Microsoft.FSharp.Quotations.DerivedPatterns
-//open Microsoft.FSharp.Quotations.ExprShape
-//
-//let x, y = 10, 10
-//let expr = <@ x * y @>
-//
-//let rec showSyntax f =
-//    match f with
-//    | Int32 v ->
-//        sprintf "%i" v
-//    | PropertyGet (_, v, _) ->
-//        sprintf "%s" (v.ToString())
-//    | Value (v, _) ->
-//        sprintf "%s" (v.ToString())
-//    | SpecificCall <@@ (+) @@> (_, _, exprs) ->
-//        let left = showSyntax exprs.Head
-//        let right = showSyntax exprs.Tail.Head
-//        sprintf "%s + %s" left right
-//    | SpecificCall <@@ (-) @@> (_, _, exprs) ->
-//        let left = showSyntax exprs.Head
-//        let right = showSyntax exprs.Tail.Head
-//        sprintf "%s - %s" left right
-//
-//showSyntax <@@ x + y @@>
-//
-//let operators = System.Type.GetType("Microsoft.FSharp.Core.Operators, FSharp.Core")
-//let multiplyOperator = operators.GetMethod("op_Multiply")
-//let varX = Var("x", typeof<int>, false)
-//let varY = Var("y", typeof<int>, false)
-//let call = Expr.Call(multiplyOperator, [ Expr.Var(varX); Expr.Var(varY) ])
-
-//open FSharp.Quotations  
-//let f1 (v:Expr<int>) = <@ %v + 1 @> 
-//let expr = f1 <@ 3 @> 
-
-
-
