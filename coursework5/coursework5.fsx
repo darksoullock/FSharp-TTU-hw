@@ -146,8 +146,9 @@ usrows.Length
 // 6) Combine the data from 2 data sources into a single chart. Add appropriate titles and
 //    legends. 
 
-let c3 = Chart.Combine [Chart.Column (iFilteredData);
-                        Chart.Column (usFilteredData, Title = "US (red) and Imperial (Blue) data", Color = System.Drawing.Color.Red, XTitle = "Fuel consumption (l/100km)", YTitle = "CO2")]
+let c3 = Chart.Combine([Chart.Column (iFilteredData);
+                        Chart.Column (usFilteredData, Title = "US (red) and Imperial (Blue) data", Color = System.Drawing.Color.Red, XTitle = "Fuel consumption (l/100km)", YTitle = "CO2")])
+                        .WithXAxis(Title = "Fuel consumption (l/100km)").WithYAxis(Title = "CO2 Exhaust (g/l)")
 c3.ShowChart()
 
 
