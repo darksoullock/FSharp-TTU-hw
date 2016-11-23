@@ -111,10 +111,8 @@ let option = new OptionBuilder ()
 
 let fourthRoot n =
     option {
-        let! first = squareRoot n
-        let! second = squareRoot first
-        let! third = squareRoot second
-        let! fourth = squareRoot third
+        let! second = squareRoot n
+        let! fourth = squareRoot second
         return fourth
     }
 
@@ -192,5 +190,6 @@ let rec eval expr =
 //let eval' expr (env:Map<string, int>) =
 //    eval expr env
 
-//let expr = Diff(Let("asd", Sum(Const(2),Const(2)), Prod(Ident("asd"), Const(5))), Ident("qwe"))   // (let asd = 2+2 in asd*5)-qwe
+//let expr = Diff(Let("asd", Sum(Const(2),Const(2)), Prod(Ident("asd"), Const(5))), Ident("qwe"))   // (let asd=2+2 in asd*5)-qwe
 //let fn = runReader (eval expr) (Map.ofList ["qwe",3])
+//let fn = runReader (eval expr) (Map.ofList ["asd",3])
