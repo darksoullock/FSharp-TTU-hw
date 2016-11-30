@@ -167,9 +167,9 @@ type Expr =
 let rec eval expr =
     reader {
         match expr with
-        | Const(x)   -> return ask x
+        | Const(x)   -> return x
         | Ident(x)   -> let! a = Map.find x
-                        return ask a
+                        return a
         | Neg(x)     -> let! a = eval x
                         return -a
         | Sum(x,y)   -> let! a = eval x
@@ -184,7 +184,7 @@ let rec eval expr =
         | Let(x,y,z) -> let! a = eval y
                         let! env = Map.add x a
                         let b = runReader (eval z) env
-                        return ask b
+                        return b
     }
 
 //let eval' expr (env:Map<string, int>) =
