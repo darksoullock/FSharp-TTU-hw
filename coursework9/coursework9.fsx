@@ -61,7 +61,7 @@ let downloadAsync (url:string) =
     }
 
 let downloadParallel (urls: string list) =
-    Async.Parallel (urls |> List.map downloadAsync)
+    urls |> List.map downloadAsync |> Async.Parallel
 
 
 //Async.RunSynchronously (downloadParallel ["http://whatismyip.akamai.com/"; "http://api.ipify.org/"; "https://api.ipify.org?format=json"])
@@ -80,9 +80,17 @@ let getHost x =
     let uri = new System.Uri(x)
     uri.Host
 
+// Here is the first way to solve this task.
+// We take all possible different domains and download them in parallel. Repeat for the rest.
+// Then we group this parallel blocks in one sequence
+// for two urls (u1 and u2) from one domain and one (x1) from another it will look like this:
+//   ___u1___
+// _|        |___u2___
+//  |___x1___|
+
 let rec separateUnique urls u nu =
     match urls with
-    | [] -> (u, nu)
+    | [] -> u, nu
     | x::xs -> if (u |> List.map getHost |> List.contains (getHost x))
                then separateUnique xs u (x::nu)
                else separateUnique xs (x::u) nu
@@ -97,10 +105,42 @@ let rec downloadSemiParallel urls =
             let! other = downloadSemiParallel nu
             return (Array.concat [|part; other|])
     }
+// end
 
+// Here is the second way to solve this task.
+// We take all urls from the same domain and download them sequentially
+// Then we group this chains in one parallel block
+// for two urls (u1 and u2) from one domain and one (x1) from another it will look like this:
+//   ___u1______u2___
+// _|                |_
+//  |___x1____.......|
 
-//let sampleUrls = ["http://whatismyip.akamai.com/"; "http://api.ipify.org/"; "https://api.ipify.org?format=json"]
-//Async.RunSynchronously (downloadSemiParallel sampleUrls)
+let rec getAsyncSequence group = 
+    async {
+        match group with
+        | [] -> return Array.empty
+        | x::xs ->
+            let! part = downloadAsync x
+            let! other = getAsyncSequence xs
+            return Array.append [|part|] other
+    }
+
+let downloadSemiParallel' urls = 
+    let domainGroups = List.groupBy <| getHost <| urls |> List.map (snd >> getAsyncSequence)
+    async {
+        let! all = Async.Parallel domainGroups
+        return Array.concat all
+    }
+
+// as for me, second options is better (e.g. if x1 download time will be the same as u1+u2 first option will be longer)
+// but both cases are faster than just sequential loading
+   
+// end
+
+//let sampleUrls = ["http://api.ipify.org/"; "https://api.ipify.org?format=json"; "https://courses.cs.ut.ee/MTAT.03.244/2016_fall/uploads/Main/Module%209%20-%20Partnership"; "https://courses.cs.ut.ee/2016/softeco/fall/Main/Workshops"; "http://courses.cs.ut.ee"] 
+//// link to the presentation should load slower than others, to make test more evident (at least try)
+//sampleUrls |> downloadSemiParallel' |> Async.RunSynchronously |> ignore 
+//sampleUrls |> downloadSemiParallel |> Async.RunSynchronously |> ignore
 
 (*
   Task 3:
